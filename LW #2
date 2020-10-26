@@ -40,7 +40,7 @@ int main() {
     char yesno, field;
     int answer, temp;
     bool was_read = false;
-    //setlocale(LC_ALL, "Russian");
+    setlocale(LC_ALL, "Russian");
     cout << "[ База данных кинтеатра XXX ]" << endl;
     do {
         cout << "\nДоступные команды:" << endl;

@@ -1,0 +1,379 @@
+#include <iostream>
+#include <fstream>
+#include <string>
+#include <cmath>
+#include <algorithm>
+using namespace std;
+
+////////////////////////////////////////////////////////////////////////////
+//////////////////////////// Структура Movie ///////////////////////////////
+//// Название кинофильма, сеанс, стоимость билета, количество зрителей /////
+////////////////////////////////////////////////////////////////////////////
+
+struct Movie{
+    char name[20]; // название фильма, строковая переменная
+    char seance[10]; // ID номер сеанса (как правило содержит буквы и цифры)
+    int ticket_price; // цена билета, целое число
+    int viewers_quantity; // количество зрителей, целое число
+    bool is_full; // переменная-маркер, показывает, является ли структурная                
+};                // переменная пустой (true - заполнена, false - пуста)
+
+// Вспомогательные функции
+int check_size(string filename);
+bool check_index(int index, Movie* arr);
+// Основные функции
+void read_file(Movie*& arr, string filename);
+void input_element(int index, Movie* arr);
+void print_element(int index, Movie* arr);
+void delete_element(int index, Movie* arr);
+int find_empty(Movie* arr);
+int min_element(Movie* arr, char field);
+int find_closest(Movie* arr, char field);
+void sort_struct(Movie* arr, char field, char type);
+void print_struct(Movie* arr);
+void write_struct(Movie* arr, string filename);
+
+
+////////////////////////////////////////////////////////////////////////////
+int main() {
+    Movie* arr = {};
+    char yesno, field;
+    int answer, temp;
+    bool was_read = false;
+    //setlocale(LC_ALL, "Russian");
+    cout << "[ База данных кинтеатра XXX ]" << endl;
+    do {
+        cout << "\nДоступные команды:" << endl;
+        cout << "[1] Чтение содержимого из файла input.txt" << endl;
+        if (was_read) {
+            cout << "[2] Ввод элементов полей структуры с клавиатуры" << endl;
+            cout << "[3] Вывод указанного элемента структуры" << endl;
+            cout << "[4] Удаление указанного элемента структуры" << endl;
+            cout << "[5] Поиск пустого элемента структуры" << endl;
+            cout << "[6] Поиск минимального элемента структуры (в выбранном поле)" << endl;
+            cout << "[7] Поиск элемента с заданным значением поля или с наиболее близким к нему" << endl;
+            cout << "[8] Сортировать элементы БД по возрастанию заданного поля" << endl;
+            cout << "[9] Сортировать элементы БД по убыванию заданного поля" << endl;
+            cout << "[10] Вывод всех элементов на экран" << endl;
+            cout << "[11] Запись данных в файл output.txt" << endl;          
+        }
+        
+        cout << "\nВведите номер команды: ";
+        cin >> answer;
+
+        if (!was_read && answer > 1) {
+            answer = 0;
+        }
+
+        switch (answer) {
+        case 1: 
+            read_file(arr, "input.txt"); 
+            was_read = true; 
+            break;
+        case 2:
+            cout << "Введите индекс добавляемого элемента: "; 
+            cin >> temp;
+            input_element(temp, arr);
+            break;
+        case 3:
+            cout << "Введите индекс выводимого элемента: ";
+            cin >> temp;
+            print_element(temp, arr);
+            break;
+        case 4:
+            cout << "Введите индекс удаляемого элемента: ";
+            cin >> temp;
+            delete_element(temp, arr);
+            break;
+        case 5:
+            temp = find_empty(arr);
+            if (temp != -1) {
+                cout << "Первый свобободный элемент: " << temp << endl;
+            }
+            break;
+        case 6:
+            cout << "Выберите, по какому полю будет проводиться поиск:" << endl;
+            cout << "цена билета [t] или количество зрителей [v]." << endl;
+            cout << "Введите соответсвующий символ из квадратных скобок: ";
+            cin >> field;
+            temp = min_element(arr, field);
+            if (temp != -1) {
+                cout << "Индекс минимального элемента по выбранному полю: " << temp << endl;
+            }
+            break;
+        case 7:
+            cout << "Выберите, по какому полю будет проводиться поиск:" << endl;
+            cout << "цена билета [t] или ID номер сеанса [s]." << endl;
+            cout << "Введите соответсвующий символ из квадратных скобок: ";
+            cin >> field;
+            temp = find_closest(arr, field);
+            if (temp != -1) {
+                cout << "Элемент №" << temp << endl;   
+            }
+            break;
+        case 8:
+            cout << "Выберите, по какому полю будет проводиться сортировка:" << endl;
+            cout << "цена билета [t] или количество зрителей [v]." << endl;
+            cout << "Введите соответсвующий символ из квадратных скобок: ";
+            cin >> field;
+            sort_struct(arr, field, 'a');
+            break;
+        case 9:
+            cout << "Выберите, по какому полю будет проводиться сортировка:" << endl;
+            cout << "цена билета [t] или количество зрителей [v]." << endl;
+            cout << "Введите соответсвующий символ из квадратных скобок: ";
+            cin >> field;
+            sort_struct(arr, field, 'd');
+            break;
+        case 10:
+            print_struct(arr);
+            break;
+        case 11:
+            write_struct(arr, "output.txt");
+            break;
+        default:
+            cout << "Ошибка! Введена неверная команда." << endl;
+        }
+        cout << "\nПродолжить? (y/n) ";
+        cin >> yesno;
+    } while (yesno == 'y');
+
+    return 0;
+}
+
+////////////////////////////////////////////////////////////////////////////
+int check_size(string filename) {
+    ifstream fin(filename);
+    int size = 0;
+    char temp[50];
+    while (!fin.eof()) {
+        fin.getline(temp, 50);
+        size++;
+    }
+    if (size % 5 != 0) {
+        return -1;
+    }
+    return (size /= 5);
+}
+
+bool check_index(int index, Movie* arr) {
+    if (index > sizeof(arr) || index < 0) {
+        cout << "Ошибка! Введён недопустимый индекс." << endl;
+        return false;
+    }
+    return true;
+}
+
+////////////////////////////////////////////////////////////////////////////
+// Чтение содержимого из файла input.txt
+void read_file(Movie*& arr, string filename){
+    ifstream fin(filename);
+    if (fin.fail()) {
+        cout << "Ошибка! Файл отстутсвует или не может быть открыт." << endl;
+        return;
+    }
+
+    int size = check_size(filename);
+    if (size == -1) {
+        cout << "Ошибка! Файл неверно скомпонован." << endl;
+        return;
+    }
+
+    arr = new Movie[size];
+
+    for (int i = 0; i < size; i++){
+        fin.getline(arr[i].name, 20);
+        fin.getline(arr[i].seance, 20);
+        fin >> arr[i].ticket_price;
+        fin.get();
+        fin >> arr[i].viewers_quantity;
+        fin.get();
+        fin.get();
+        arr[i].is_full = true;
+    }
+    cout << "Информация успешно считана!" << endl;
+    fin.close();
+}
+
+// Ввод элемента поля структуры с клавиатуры
+void input_element(int index, Movie* arr) {
+    if (!check_index(index, arr)) return;
+    cout << "Название фильма: ";
+    cin >> arr[index].name;
+    cout << "ID номер сеанса: ";
+    cin >> arr[index].seance;
+    cout << "Цена билета: ";
+    cin >> arr[index].ticket_price;
+    cout << "Количество зрителей: ";
+    cin >> arr[index].viewers_quantity;
+    arr[index].is_full = true;
+    cout << "Элемент успешно добавлен!" << endl;
+}
+
+// Вывод указанного элемента структуры
+void print_element(int index, Movie* arr) {
+    if (!check_index(index, arr)) return;
+    if (!arr[index].is_full) cout << "Данный элемент был удалён." << endl;
+    else {
+        cout << "Название фильма: " << arr[index].name << endl;
+        cout << "ID номер сеанса: " << arr[index].seance << endl;
+        cout << "Цена билета: " << arr[index].ticket_price << endl;
+        cout << "Количество зрителей: " << arr[index].viewers_quantity << endl;
+        cout << endl;
+    }
+}
+
+// Удаление указанного элемента структуры
+void delete_element(int index, Movie* arr) {
+    if (!check_index(index, arr)) return;
+    arr[index].is_full = false;
+    cout << "Элемент успешно удалён!" << endl;
+}
+
+// Поиск свободного элемента
+int find_empty(Movie* arr) {
+    int size = sizeof(arr);
+    for (int i = 0; i < size; i++) {
+        if (!arr[i].is_full) return i;
+    }
+    cout << "Нет свободных элеменетов." << endl;
+    return -1;
+}
+
+// Поиск минимального элемента
+int min_element(Movie* arr, char field) {
+    int size = sizeof(arr);
+    int min = 99999;
+    int i, min_i;
+    int temp;
+
+    for (i = 0; i < size; i++) {
+        if (field == 't') temp = arr[i].ticket_price;
+        else if (field == 'v') temp = arr[i].viewers_quantity;
+        else {
+            cout << "Ошибка! Введён неверный символ." << endl; return -1;
+        }   
+        if (arr[i].is_full && temp < min) {
+            min = temp;
+            min_i = i;
+        }
+    }
+    return min_i;
+}
+
+// Поиск элемента с заданным значением поля или с наиболее близким к нему по значению
+int find_closest(Movie* arr, char field) {
+    int size = sizeof(arr);
+    int delta = 0, delta_i = -1;
+    int min_delta = 999999;
+    int max_delta = -1;
+
+    if (field == 't') {
+        int value;
+        cout << "Введите числовое значение, которое хотите найти: ";
+        cin >> value;
+        for (int i = 0; i < size; i++) {
+            if (arr[i].is_full) {
+                if (value == arr[i].ticket_price) { delta_i = i; break; }
+                delta = abs(value - arr[i].ticket_price);
+                if (delta < min_delta) {
+                    min_delta = delta;
+                    delta_i = i;
+                }
+            }
+        }
+        cout << "Найдено: " << arr[delta_i].ticket_price << endl;
+    }
+
+    else if (field == 's') {
+        string value;
+        cout << "Введите строковое значение, которое хотите найти: ";
+        cin >> value;
+        for (int i = 0; i < size; i++) {
+            if (arr[i].is_full) {
+                string s(arr[i].seance);
+                if (value == s) return i;
+                if ((value.find(s) < size) && (value.find(s) != -1)) { delta_i = i; break; }
+                if ((s.find(value) < size) && (s.find(value) != -1)) { delta_i = i; break; }
+                for (int j = 0; j < (min(value.length(), s.length())); j++) {
+                    if (value[j] == s[j]) delta++;
+                }
+                if (delta > max_delta) {
+                    max_delta = delta;
+                    delta_i = i;
+                }
+            }
+        }
+        cout << "Найдено: " << arr[delta_i].seance << endl;
+    }
+    else {
+        cout << "Ошибка! Введён неверный символ." << endl; return -1;
+    }
+    return delta_i;
+}
+
+// Сортировка массива
+void sort_struct(Movie* arr, char field, char type)
+{
+    Movie temp;
+    int t1, t2;
+    int size = sizeof(arr);
+    for (int i = 0; i < size; i++) {
+        for (int j = 0; j < size - 1; j++) {
+            if (field == 't') {
+                t1 = arr[j].ticket_price;
+                t2 = arr[j + 1].ticket_price;
+            }
+            else if (field == 'v') {
+                t1 = arr[j].viewers_quantity;
+                t2 = arr[j + 1].viewers_quantity;
+            }
+            else {
+                cout << "Ошибка! Введён неверный символ." << endl; return;
+            }
+            if (type == 'a' && (t1 > t2)) {
+                temp = arr[j];
+                arr[j] = arr[j + 1];
+                arr[j + 1] = temp;
+            }
+            else if (type == 'd' && (t1 < t2)) {
+                temp = arr[j];
+                arr[j] = arr[j + 1];
+                arr[j + 1] = temp;
+            }
+        }
+    }
+    cout << "БД успешно отсортирована!" << endl;
+}
+
+// Вывод массива на экран
+void print_struct(Movie* arr){
+    int size = sizeof(arr);
+    cout << "\n[-------------------------------------------]\n" << endl;
+    for (int i = 0; i < size; i++){
+        if (!arr[i].is_full) cout << "";
+        else {
+            print_element(i, arr);
+            cout << endl;
+        }
+    }
+    cout << "[-------------------------------------------]" << endl;
+}
+
+// Запись данных в файл
+void write_struct(Movie* arr, string filename) {
+    ofstream fout(filename);
+    int size = sizeof(arr);
+    for (int i = 0; i < size; i++) {
+        if (!arr[i].is_full) fout << "";
+        else {
+            fout << arr[i].name << endl;
+            fout << arr[i].seance << endl;
+            fout << arr[i].ticket_price << endl;
+            fout << arr[i].viewers_quantity << endl;
+            fout << endl;
+        }
+    }
+    cout << "Успешно!" << endl;
+}
+

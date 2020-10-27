@@ -3,6 +3,7 @@
 #include <string>
 #include <cmath>
 #include <algorithm>
+#include <Windows.h>--
 using namespace std;
 
 ////////////////////////////////////////////////////////////////////////////
@@ -10,7 +11,7 @@ using namespace std;
 //// Название кинофильма, сеанс, стоимость билета, количество зрителей /////
 ////////////////////////////////////////////////////////////////////////////
 
-struct Movie{
+struct Movie {
     char name[20]; // название фильма, строковая переменная
     char seance[10]; // ID номер сеанса (как правило содержит буквы и цифры)
     int ticket_price; // цена билета, целое число
@@ -40,7 +41,9 @@ int main() {
     char yesno, field;
     int answer, temp;
     bool was_read = false;
-    setlocale(LC_ALL, "Russian");
+    setlocale(LC_ALL, "");
+    SetConsoleCP(1251);
+    SetConsoleOutputCP(1251);
     cout << "[ База данных кинтеатра XXX ]" << endl;
     do {
         cout << "\nДоступные команды:" << endl;
@@ -55,9 +58,9 @@ int main() {
             cout << "[8] Сортировать элементы БД по возрастанию заданного поля" << endl;
             cout << "[9] Сортировать элементы БД по убыванию заданного поля" << endl;
             cout << "[10] Вывод всех элементов на экран" << endl;
-            cout << "[11] Запись данных в файл output.txt" << endl;          
+            cout << "[11] Запись данных в файл output.txt" << endl;
         }
-        
+
         cout << "\nВведите номер команды: ";
         cin >> answer;
 
@@ -66,12 +69,12 @@ int main() {
         }
 
         switch (answer) {
-        case 1: 
-            read_file(arr, "input.txt"); 
-            was_read = true; 
+        case 1:
+            read_file(arr, "input.txt");
+            was_read = true;
             break;
         case 2:
-            cout << "Введите индекс добавляемого элемента: "; 
+            cout << "Введите индекс добавляемого элемента: ";
             cin >> temp;
             input_element(temp, arr);
             break;
@@ -108,7 +111,7 @@ int main() {
             cin >> field;
             temp = find_closest(arr, field);
             if (temp != -1) {
-                cout << "Элемент №" << temp << endl;   
+                cout << "Элемент №" << temp << endl;
             }
             break;
         case 8:
@@ -166,7 +169,7 @@ bool check_index(int index, Movie* arr) {
 
 ////////////////////////////////////////////////////////////////////////////
 // Чтение содержимого из файла input.txt
-void read_file(Movie*& arr, string filename){
+void read_file(Movie*& arr, string filename) {
     ifstream fin(filename);
     if (fin.fail()) {
         cout << "Ошибка! Файл отстутсвует или не может быть открыт." << endl;
@@ -181,7 +184,7 @@ void read_file(Movie*& arr, string filename){
 
     arr = new Movie[size];
 
-    for (int i = 0; i < size; i++){
+    for (int i = 0; i < size; i++) {
         fin.getline(arr[i].name, 20);
         fin.getline(arr[i].seance, 20);
         fin >> arr[i].ticket_price;
@@ -252,7 +255,7 @@ int min_element(Movie* arr, char field) {
         else if (field == 'v') temp = arr[i].viewers_quantity;
         else {
             cout << "Ошибка! Введён неверный символ." << endl; return -1;
-        }   
+        }
         if (arr[i].is_full && temp < min) {
             min = temp;
             min_i = i;
@@ -347,17 +350,17 @@ void sort_struct(Movie* arr, char field, char type)
 }
 
 // Вывод массива на экран
-void print_struct(Movie* arr){
+void print_struct(Movie* arr) {
     int size = sizeof(arr);
-    cout << "\n[-------------------------------------------]\n" << endl;
-    for (int i = 0; i < size; i++){
+    cout << "\n[-------------------------------------------------]\n" << endl;
+    for (int i = 0; i < size; i++) {
         if (!arr[i].is_full) cout << "";
         else {
             print_element(i, arr);
             cout << endl;
         }
     }
-    cout << "[-------------------------------------------]" << endl;
+    cout << "[-------------------------------------------------]" << endl;
 }
 
 // Запись данных в файл
@@ -376,4 +379,3 @@ void write_struct(Movie* arr, string filename) {
     }
     cout << "Успешно!" << endl;
 }
-

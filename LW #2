@@ -39,7 +39,7 @@ void write_struct(Movie* arr, string filename);
 int main() {
     Movie* arr = {};
     char yesno, field;
-    int answer, temp;
+    int answer, temp, size;
     bool was_read = false;
     setlocale(LC_ALL, "");
     SetConsoleCP(1251);
@@ -160,7 +160,7 @@ int check_size(string filename) {
 }
 
 bool check_index(int index, Movie* arr) {
-    if (index > sizeof(arr) || index < 0) {
+    if (index > check_size("input.txt") || index < 0) {
         cout << "Ошибка! Введён недопустимый индекс." << endl;
         return false;
     }
@@ -194,7 +194,7 @@ void read_file(Movie*& arr, string filename) {
         fin.get();
         arr[i].is_full = true;
     }
-    cout << "Информация успешно считана!" << endl;
+    cout << "Информация успешно считана! Всего позиций: " << size << endl;
     fin.close();
 }
 
@@ -235,7 +235,7 @@ void delete_element(int index, Movie* arr) {
 
 // Поиск свободного элемента
 int find_empty(Movie* arr) {
-    int size = sizeof(arr);
+    int size = check_size("input.txt");
     for (int i = 0; i < size; i++) {
         if (!arr[i].is_full) return i;
     }
@@ -245,7 +245,7 @@ int find_empty(Movie* arr) {
 
 // Поиск минимального элемента
 int min_element(Movie* arr, char field) {
-    int size = sizeof(arr);
+    int size = check_size("input.txt");
     int min = 99999;
     int i, min_i;
     int temp;
@@ -266,7 +266,7 @@ int min_element(Movie* arr, char field) {
 
 // Поиск элемента с заданным значением поля или с наиболее близким к нему по значению
 int find_closest(Movie* arr, char field) {
-    int size = sizeof(arr);
+    int size = check_size("input.txt");
     int delta = 0, delta_i = -1;
     int min_delta = 999999;
     int max_delta = -1;
@@ -320,7 +320,7 @@ void sort_struct(Movie* arr, char field, char type)
 {
     Movie temp;
     int t1, t2;
-    int size = sizeof(arr);
+    int size = check_size("input.txt");
     for (int i = 0; i < size; i++) {
         for (int j = 0; j < size - 1; j++) {
             if (field == 't') {
@@ -351,7 +351,7 @@ void sort_struct(Movie* arr, char field, char type)
 
 // Вывод массива на экран
 void print_struct(Movie* arr) {
-    int size = sizeof(arr);
+    int size = check_size("input.txt");
     cout << "\n[-------------------------------------------------]\n" << endl;
     for (int i = 0; i < size; i++) {
         if (!arr[i].is_full) cout << "";
@@ -366,7 +366,8 @@ void print_struct(Movie* arr) {
 // Запись данных в файл
 void write_struct(Movie* arr, string filename) {
     ofstream fout(filename);
-    int size = sizeof(arr);
+    int size = check_size("input.txt");
+    fout << size << endl;
     for (int i = 0; i < size; i++) {
         if (!arr[i].is_full) fout << "";
         else {

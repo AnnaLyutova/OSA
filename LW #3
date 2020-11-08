@@ -1,0 +1,272 @@
+#include <iostream>
+#include <string>
+#include <Windows.h>
+using namespace std;
+
+////////////////////////////////////////////////////////////////////////////
+//////////////////////////// Структура Movie ///////////////////////////////
+//// Название кинофильма, сеанс, стоимость билета, количество зрителей /////
+////////////////////////////////////////////////////////////////////////////
+
+struct Movie {
+    char name[20]; // название фильма, строковая переменная
+    char seance[10]; // ID номер сеанса (как правило содержит буквы и цифры)
+    int ticket_price; // цена билета, целое число
+    int viewers_quantity; // количество зрителей, целое число 
+    Movie* prev, * next; // указатели на предыдущий и следующий элементы
+};
+
+////////////////////////////////////////////////////////////////////////////
+class MovieList {
+    Movie* head, * tail; // указатели на адреса начала списка и его конца
+    bool doubly;
+public:
+    MovieList() :head(NULL), tail(NULL), doubly(false) {};
+    void choose_type();
+    void add_tail();   
+    void add_head();
+    void delete_tail();
+    void delete_head();
+    Movie* find_element(char field, string input);
+    void add_next(char field, string input);
+    void delete_found(char field, string input);
+    void print_list();
+};
+
+////////////////////////////////////////////////////////////////////////////
+// Выбор типа списка
+void MovieList::choose_type() {
+    char type;
+    cout << "Работать с двусвязным(d) или односвязням(s) списком? (d/s): ";
+    cin >> type;
+    if (type == 's') {
+        doubly = false; 
+        cout << "Список односвязный. \n" << endl;
+        return; 
+    }
+    if (type == 'd') {
+        doubly = true;
+        cout << "Список двусвязный. \n" << endl;
+        return;
+    }
+    cout << "Ошибка! Введён неверный символ. Список односвязный.\n" << endl;
+}
+
+// Добавление элемента в конец списка
+void MovieList::add_tail()
+{    
+    Movie* temp = new Movie;
+    temp->next = NULL;       
+
+    cout << "Название фильма: ";
+    cin >> temp->name;
+    cout << "ID номер сеанса: ";
+    cin >> temp->seance;
+    cout << "Цена билета: ";
+    cin >> temp->ticket_price;
+    cout << "Количество зрителей: ";
+    cin >> temp->viewers_quantity;
+
+    if (head != NULL) {
+        if (doubly) temp->prev = tail;
+        tail->next = temp;
+        tail = temp;
+    }
+    else {
+        if (doubly) temp->prev = NULL;
+        head = tail = temp;
+    }
+    cout << "Элемент успешно добавлен в конец!\n" << endl;
+}
+
+// Добавление элемента в начало списка
+void MovieList::add_head()
+{
+    Movie* temp = new Movie;
+    if (doubly) temp->prev = NULL;
+
+    cout << "Название фильма: ";
+    cin >> temp->name;
+    cout << "ID номер сеанса: ";
+    cin >> temp->seance;
+    cout << "Цена билета: ";
+    cin >> temp->ticket_price;
+    cout << "Количество зрителей: ";
+    cin >> temp->viewers_quantity;
+
+    if (head != NULL) {
+        temp->next = head;
+        if (doubly) head->prev = temp;
+        head = temp;
+    }
+    else {
+        temp->next = NULL;
+        tail = head = temp;
+    }
+
+    cout << "Элемент успешно добавлен в начало!\n" << endl;
+}
+
+// Удаление конечного элемента списка
+void MovieList::delete_tail()
+{
+    Movie* temp = new Movie;
+    Movie* temp_p = head;
+    if (tail == head) head = tail = NULL;
+    else if (head != NULL) { 
+        temp = tail;
+        if (doubly) tail = tail->prev;
+        else {
+            while (temp_p->next != temp) temp_p = temp_p->next;
+            tail = temp_p;
+        }
+        tail->next = NULL;
+        delete temp;
+    }
+    else {
+        cout << "Список пуст!\n" << endl;
+    }
+    cout << "Последний элемент успешно удалён!\n" << endl;
+}
+
+// Удаление начального элемента списка
+void MovieList::delete_head()
+{
+    Movie* temp = new Movie;
+    if (head != NULL && tail != NULL) {
+        temp = head->next;
+        delete head;
+        head = temp;
+    }
+    else {
+        cout << "Список пуст!\n" << endl;
+    }
+    cout << "Первый элемент успешно удалён!\n" << endl;
+}
+
+// Поиск элемента по заданному значению поля структуры
+Movie* MovieList::find_element(char field, string input) {
+    Movie* temp = head;
+    string s;
+    while (temp != NULL)
+    {
+        switch (field) {
+        case 'n': s = temp->name; break;
+        case 's': s = temp->seance; break;
+        case 't': s = to_string(temp->ticket_price); break;
+        case 'v': s = to_string(temp->viewers_quantity); break;
+        default: 
+            cout << "Ошибка! Введён неверный символ." << endl;
+            return NULL;
+        }
+        if (s == input) {
+            cout << "Элемент найден!\n" << endl;
+            return (temp);
+        }
+        temp = temp->next;
+    }
+    cout << "Элемент не найден!\n" << endl;
+    return NULL;
+}
+
+// Добавление элемента после найденного
+void MovieList::add_next(char field, string input)
+{    
+    Movie* temp_x = find_element(field, input);
+    if (temp_x == NULL) return;
+
+    Movie* temp = new Movie;
+    Movie* temp_n = temp_x->next; 
+
+    if (temp_n == NULL) { add_tail(); return; }
+
+    cout << "Название фильма: ";
+    cin >> temp->name;
+    cout << "ID номер сеанса: ";
+    cin >> temp->seance;
+    cout << "Цена билета: ";
+    cin >> temp->ticket_price;
+    cout << "Количество зрителей: ";
+    cin >> temp->viewers_quantity;
+
+    if (head != NULL && tail != NULL) {
+        temp_x->next = temp; 
+        if (doubly) temp_n->prev = temp;
+        temp->next = temp_n;
+        if (doubly) temp->prev = temp_x;
+    }
+    else {
+        if (doubly) temp->prev = NULL;
+        head = tail = temp;
+    }
+    cout << "Элемент успешно добавлен!\n" << endl;
+}
+
+// Удаление найденного элемента
+void MovieList::delete_found(char field, string input)
+{
+    Movie* temp = find_element(field, input);
+    if (temp == NULL) return;
+
+    Movie* temp_p = head;
+    Movie* temp_n = temp->next;
+    
+    if (doubly) temp_p = temp->prev;
+    else {
+        while (temp_p->next != temp) temp_p = temp_p->next;
+    }
+
+    if (temp_n == NULL) { delete_tail(); return; }
+    if (temp_p == NULL) { delete_head(); return; }
+
+    if (head != NULL && tail != NULL) {
+        temp_p->next = temp->next;
+        if (doubly) temp_n->prev = temp->prev;
+        delete temp;
+    }
+    else {
+        cout << "Список пуст!\n" << endl;
+    }
+    cout << "Элемент успешно удалён!\n" << endl;
+}
+
+// Вывод списка на экран
+void MovieList::print_list(){
+    Movie* temp = head;
+    if (head == NULL || tail == NULL) { cout << "Список пуст.\n" << endl; return; }
+    cout << "-------------------------------------------------\n" << endl;
+    while (temp != NULL)              
+    {
+        cout << "Название фильма: " << temp->name << endl;
+        cout << "ID номер сеанса: " << temp->seance << endl;
+        cout << "Цена билета: " << temp->ticket_price << endl;
+        cout << "Количество зрителей: " << temp->viewers_quantity << endl;
+        cout << endl;
+        temp = temp->next;            
+    }
+    cout << "-------------------------------------------------\n" << endl;
+}
+
+////////////////////////////////////////////////////////////////////////////
+int main() {
+
+    setlocale(LC_ALL, "");
+    SetConsoleCP(1251);
+    SetConsoleOutputCP(1251);
+    MovieList lst; 
+
+    lst.choose_type();
+    lst.add_tail();
+    lst.add_head();
+    lst.find_element('n', "Poirot");
+    lst.add_next('t', "300");
+    lst.print_list();
+
+    lst.delete_head();
+    lst.delete_tail();
+    lst.print_list();
+    lst.delete_found('v', "15");
+    lst.print_list();
+    
+    return 0;
+}

@@ -1,0 +1,181 @@
+#include <iostream>
+#include <fstream>
+#include <Windows.h>
+using namespace std;
+
+////////////////////////////////////////////////////////////////////////////
+/////////////////////////// Бинарное дерево поиска /////////////////////////
+////////////////////////////////////////////////////////////////////////////
+
+struct bin_node {
+	int data; // содержимое узла
+	bin_node* left; // указатель на левый узел
+	bin_node* right; // указатель на правый узел
+};
+
+class bin_tree {
+private: 
+	bin_node* root; // указатель на корень дерева
+	int count; // счётчик количества вершин в дереве
+public:
+	bin_tree() : root(0), count(0) {}
+	~bin_tree() {}
+	void bin_go();
+	void bin_go_inside(bin_node*);
+	void bin_insert();
+	void bin_insert_inside(int item);
+	void bin_delete();
+};
+
+////////////////////////////////////////////////////////////////////////////
+// методы обхода дерева
+void bin_tree::bin_go() {
+	ofstream fout("output.txt", ios::trunc);
+	if (this->root == 0) {
+		fout << "Дерево пустое!" << endl;
+		return;
+	}
+	fout.close();
+	bin_go_inside(this->root);
+}
+
+void bin_tree::bin_go_inside(bin_node* node) { 
+	ofstream fout("output.txt", ios::app);
+	if (node->left != 0) {
+		bin_go_inside(node->left);
+	}
+	fout << node->data << endl;
+	if (node->right != 0) {
+		bin_go_inside(node->right);
+	}
+	fout.close();
+}
+
+// методы добавления элемента
+void bin_tree::bin_insert() {
+	int item;
+	cout << "Введите элементы дерева (0 - закончить ввод)" << endl;
+	for (int i = 0;; i++) {
+		cout << "№" << i + 1 << ": ";
+		cin >> item;
+		if (item == 0) {
+			cout << endl;
+			break;
+		}
+		bin_insert_inside(item);
+	}
+}
+
+void bin_tree::bin_insert_inside(int item) {
+	if (count == 0) { // дерево пустое 
+		root = new bin_node;
+		count++;
+		root->left = 0; root->right = 0; root->data = item;
+		cout << " - root\n";
+		return;
+	}
+	bin_node* node = root, *new_node;
+	for (;;) {
+		if (node->data == item) return; // добавляемая вершина уже есть
+		else if (node->data > item) { // добавляемая вершина меньше текущей
+			if (node->left == 0) {
+				new_node = new bin_node;
+				count++;
+				node->left = new_node;
+				new_node->left = 0; new_node->right = 0; new_node->data = item;
+				cout << " - left\n";
+				return;
+			}
+			else {
+				node = node->left;
+				continue;
+			}
+		}
+		else if (node->data < item) { // добавляемая вершина больше текущей
+			if (node->right == 0) {
+				new_node = new bin_node;
+				count++;
+				node->right = new_node;
+				new_node->left = 0; new_node->right = 0; new_node->data = item;
+				cout << " - right\n";
+				return;
+			}
+			else {
+				node = node->right;
+				continue;
+			}
+		
+		}
+	}
+}
+
+// Метод удаления элемента
+void bin_tree::bin_delete()
+{
+	int item;
+	cout << "Введите удаляемый элемент: ";
+	cin >> item;
+	bin_node** temp_address, * temp;
+	temp_address = &root;
+	temp = root;
+	//Поиск элемента удаления
+	for (;;)
+	{
+		if (temp == NULL)
+			return;
+		else if (item == temp->data)
+			break;
+		else if (item > temp->data)
+		{
+			temp_address = &temp->right;
+			temp = temp->right;
+		}
+		else
+		{
+			temp_address = &temp->left;
+			temp = temp->left;
+		}
+	}
+	//Первый случай
+	if (temp->right == NULL)
+		*temp_address = temp->left;
+	else
+	{
+		bin_node* temp_R = temp->right;
+		//Второй случай
+		if (temp_R->left == NULL)
+		{
+			temp_R->left = temp->left;
+			*temp_address = temp_R;
+		}
+		//Третий случай
+		else
+		{
+			bin_node* temp_RL = temp_R->left;
+			while (temp_RL->left != NULL)
+			{
+				temp_R = temp_RL;
+				temp_RL = temp_R->left;
+			}
+			temp_R->left = temp_RL->right;
+			temp_RL->left = temp->left;
+			temp_RL->right = temp->right;
+			*temp_address = temp_RL;
+		}
+	}
+	count--;
+	free(temp); //Удаление элемента
+}
+////////////////////////////////////////////////////////////////////////////
+int main(){
+
+	setlocale(LC_ALL, "");
+	SetConsoleCP(1251);
+	SetConsoleOutputCP(1251);
+	bin_tree bin;
+	bin.bin_insert();
+	bin.bin_delete();
+	bin.bin_go();
+	return 0;
+}
+    

@@ -56,6 +56,8 @@ void w_ud_graph::dijkstra() {
 	fiks = new int[N];
 	min_weg = new int[N];
 	von_punkt = new int[N];
+	for (int i = 0; i < N; i++) { fiks[i] = 0; }
+
 	int start, finish;
 	cout << "1. Введите номер стартовой вершины (0 - " << N - 1 << "): ";
 	cin >> start;
@@ -65,9 +67,7 @@ void w_ud_graph::dijkstra() {
 	fiks[start] = 1;
 	min_weg = dug[start];
 	min_weg[start] = 0;
-	for (int i = 0; i < N; i++) {
-		von_punkt[i] = start;
-	}
+	for (int i = 0; i < N; i++) { von_punkt[i] = start; }
 
 	// Общий шаг алгоритма
 	int min_temp;
@@ -93,9 +93,7 @@ void w_ud_graph::dijkstra() {
 	ofstream fout("output.txt");
 	int* way = new int[N];
 	int j = 1;
-	for (int i = 0; i < N; i++) {
-		way[i] = -1;
-	}
+	for (int i = 0; i < N; i++) { way[i] = -1; }
 	way[0] = finish;
 	for (int i = finish; i != start; i = von_punkt[i]) {
 		way[j] = von_punkt[i];

@@ -1,0 +1,124 @@
+#include <iostream>
+#include <fstream>
+#include <math.h>
+#include <Windows.h>
+using namespace std;
+
+////////////////////////////////////////////////////////////////////////////
+/////////////////////////// Алгоритм Дейкстры //////////////////////////////
+////////////////////////////////////////////////////////////////////////////
+
+class w_ud_graph {
+private:
+	int N;
+	int* fiks;
+	int* min_weg;
+	int* von_punkt;
+	int** dug;
+public:
+	w_ud_graph() : N(), fiks(), min_weg(), von_punkt(), dug() {
+
+		// Считывание из файла количества элементов типа int
+		ifstream fin("input.txt");
+		int temp;
+		do{
+			fin >> temp;
+			N++;	
+		} while ((!fin.eof()) && (fin.get() != '\n'));
+		cout << "Количество вершин в графе: " << N << endl;
+
+		// Трансформация dug в двумерный массив
+		dug = new int* [N];
+		for (int i = 0; i < N; i++) {
+			dug[i] = new int[N];
+		}
+
+		fin.seekg(0, ios::beg);
+		fin.clear();
+
+		// Заполнение dug числами из файла 
+		for (int i = 0; i < N; i++) {
+			for (int j = 0; j < N; j++) {
+				fin >> dug[i][j];
+				if (dug[i][j] == 0) dug[i][j] = 100000;
+			}
+		}
+		cout << "Граф успешно считан!\n" << endl;
+		fin.close();
+	}
+	~w_ud_graph() {}
+	void dijkstra();
+
+};
+
+void w_ud_graph::dijkstra() {
+	// Инициализация
+	fiks = new int[N];
+	min_weg = new int[N];
+	von_punkt = new int[N];
+	int start, finish;
+	cout << "1. Введите номер стартовой вершины (0 - " << N - 1 << "): ";
+	cin >> start;
+	cout << "2. Введите номер конечной вершины (0 - " << N - 1 << "): ";
+	cin >> finish;
+
+	fiks[start] = 1;
+	min_weg = dug[start];
+	min_weg[start] = 0;
+	for (int i = 0; i < N; i++) {
+		von_punkt[i] = start;
+	}
+
+	// Общий шаг алгоритма
+	int min_temp;
+	int min_index = 0;
+	for (int j = 0; j < N; j++) {
+		min_temp = 100000;
+		for (int i = 0; i < N; i++) {
+			if ((fiks[i] == 0) && (min_weg[i] <= min_temp)) {
+				min_temp = min_weg[i];
+				min_index = i;
+			}
+		}
+		fiks[min_index] = 1;
+		for (int i = 0; i < N; i++) {
+			if (min_weg[i] > min_temp + dug[min_index][i]) {
+				min_weg[i] = min_temp + dug[min_index][i];
+				von_punkt[i] = min_index;
+			}
+		}
+	}
+
+	// Вывод ответа (стартовая <---> конечная точки, путь)
+	ofstream fout("output.txt");
+	int* way = new int[N];
+	int j = 1;
+	for (int i = 0; i < N; i++) {
+		way[i] = -1;
+	}
+	way[0] = finish;
+	for (int i = finish; i != start; i = von_punkt[i]) {
+		way[j] = von_punkt[i];
+		j++;
+	}
+	fout << start << " <---> " << finish << endl;
+	fout << "Кратчайший путь: ";
+	cout << "\nКратчайший путь: ";
+	for (int i = N-1; i >= 0; i--) {
+		if (way[i] != -1) {
+			fout << way[i] << " ";
+			cout << way[i] << " ";
+		}
+	}
+}
+
+////////////////////////////////////////////////////////////////////////////
+int main() {
+
+	setlocale(LC_ALL, "");
+	SetConsoleCP(1251);
+	SetConsoleOutputCP(1251);
+	w_ud_graph graph;
+	graph.dijkstra();
+	return 0;
+}

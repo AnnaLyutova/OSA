@@ -1,0 +1,242 @@
+#include <iostream>
+#include <fstream>
+using namespace std;
+
+////////////////////////////////////////////////////////////////////////////
+//////////////////////////// Поиск в глубину ////////////////////////////////
+////////////////////////////////////////////////////////////////////////////
+
+const int N = 16; // Количество вершин в графе
+int arr[N][N] = // Матрица смежности
+{ {0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+{1, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+{1, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0},
+{0, 1, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0},
+{0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0},
+{0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0},
+{0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0},
+{0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1},
+{0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0},
+{0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0},
+{0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0},
+{0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0},
+{0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 1, 0, 0},
+{0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 1, 0, 1, 0},
+{0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1},
+{0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0} };
+
+struct item {
+	int data;
+	item* next;
+	item* prev;
+};
+
+////////////////////////////////////////////////////////////////////////////
+class Stack {
+private:
+	item* top;
+	int count;
+	int k;
+	bool visited[N];
+	int ways[N]; // массив родительских вершин
+	int VON_PUNKT[N]; // массив маршрута
+public:
+	Stack() {
+		top = NULL;
+		count = 0;
+	}
+
+	// Добавление элемента в начало списка
+	void push_lifo(int a) {
+		item* newitem = new item;
+		newitem->data = a;
+		newitem->next = top;
+		top = newitem;
+		count++;
+	}
+
+	// Возвращает true если стек пуст и false если нет
+	bool empty() {
+		bool empt;
+		if (top == NULL)
+			empt = true;
+		else
+			empt = false;
+		return empt;
+	}
+
+	void del() {
+		item* place = top;
+		if (place->next != NULL)
+		{
+			place->next->prev = NULL;
+			top = place->next;
+		}
+		else top = NULL;
+		delete place;
+	}
+
+	// Удаление элемента из стека
+	int pop_lifo() {
+		int temp = top->data;
+		del();
+		return temp;
+	}
+
+	// Вывод элементов после поиска
+	void out(int s_el, int en_el) {
+		int dne = en_el;
+		int count = 0;
+		do {
+			count++;
+			dne = ways[dne];
+		} while (dne != ways[s_el]);
+		k = count;
+		int* rev = new int[count]; // массив маршрута
+		int i = 0;
+		rev[i] = en_el; // конечный элемент - первый
+		i++;
+		do {
+			rev[i] = ways[en_el]; // записываем элемент из массива родительских вершин
+			i++;
+			en_el = ways[en_el];
+		} while (en_el != s_el);
+		i--;
+		while (i >= 0) { // запись с конца
+			cout << rev[i] << " ";
+			i--;
+		}
+		for (int i = 0; i < k; i++) {
+			VON_PUNKT[i] = rev[i];
+		}
+	}
+
+	// Поиск в глубину
+	void search_in_depth_stack() {
+		int start, end;
+		for (int i = 0; i < N; i++)
+		{
+			visited[i] = 0;
+		}
+		cout << "Введите начальный элемент: ";
+		cin >> start;
+		push_lifo(start);
+		cout << "Введите конечный элемент: ";
+		cin >> end;
+		visited[start] = true;
+		ways[start] = -1;
+		while (!empty()) {
+			int unit = pop_lifo(); // извлекаем элемент
+			for (int i = 0; i < N; i++) {
+				if ((visited[i] == 0) && (arr[unit][i] == 1)) {
+					push_lifo(i);
+					ways[i] = unit; // записываем родительскую вершину
+					visited[i] = true;
+				}
+			}
+		}
+		out(start, end);
+	}
+
+	// Запись данных в файл
+	void write_in_file() {
+		ofstream fout("output.txt", ofstream::app);
+		fout << "Матрица смежности:" << endl;
+		for (int i = 0; i < N; i++) {
+			for (int j = 0; j < N; j++) {
+				fout << arr[i][j] << " ";
+			}
+			fout << endl;
+		}
+		fout << "\n[СТЕК] Путь: " << endl;
+		for (int i = k - 1; i >= 0; i--) {
+			fout << VON_PUNKT[i] << " -> ";
+		}
+		fout.close();
+	}
+};
+
+////////////////////////////////////////////////////////////////////////////
+class Recursion {
+private:
+	bool visited[N]; // Массив пройденных вершин
+	int ways[N]; // Массив родительских вершин
+	int VON_PUNKT[N]; // Массив маршрута
+	int k;
+public:
+	// Рекурсивная функция
+	void func(int dot) {
+		for (int i = 0; i < N; i++) {
+			if (!visited[i] && arr[dot][i] == 1) {
+				ways[i] = dot;
+				visited[i] = true;
+				func(i);
+			}
+		}
+	}
+
+	// Поиск в глубину
+	void search_in_depth_recursion() {
+		int start;
+		for (int i = 0; i < N; i++) {
+			visited[i] = false;
+		}
+		cout << endl;
+		cout << "\nВведите начальный элемент: ";
+		cin >> start;
+		visited[start] = true;
+		ways[start] = -1;
+		func(start);
+		int end;
+		cout << "Введите конечный элемент: ";
+		cin >> end;
+		int dne = end;
+		int count = 0;
+		do {
+			count++;
+			dne = ways[dne];
+		} while (dne != ways[start]);
+		k = count;
+		int* rev = new int[count];
+		int i = 0;
+		rev[i] = end;
+		i++;
+		do {
+			rev[i] = ways[end];
+			i++;
+			end = ways[end];
+		} while (end != start);
+		i--;
+		cout << "Путь: ";
+		while (i >= 0)
+		{
+			cout << rev[i] << " ";
+			i--;
+		}
+		cout << '\n';
+		for (int i = 0; i < k; i++) {
+			VON_PUNKT[i] = rev[i];
+		}
+	}
+
+	void write_in_file() {
+		ofstream fout("output.txt", ofstream::app);
+		fout << "\n[РЕКУРСИЯ] Путь: " << endl;
+		for (int i = k - 1; i >= 0; i--) {
+			fout << VON_PUNKT[i] << " -> ";
+		}
+		fout.close();
+	}
+};
+
+////////////////////////////////////////////////////////////////////////////
+int main() {
+	setlocale(LC_ALL, "");
+	Stack st;
+	Recursion r;
+	st.search_in_depth_stack();
+	r.search_in_depth_recursion();
+	st.write_in_file();
+	r.write_in_file();
+	return 0;
+}
